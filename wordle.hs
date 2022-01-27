@@ -118,3 +118,45 @@ frequencies = foldr frequencyHelper M.empty $ concat wordList
 frequencyHelper :: Char -> M.Map Char Int -> M.Map Char Int
 frequencyHelper c frequenciesSoFar =
   M.insertWith (+) c 1 frequenciesSoFar
+
+-- More non-Wordle stuff: magic squares.
+
+-- The magic squares from the dict that start with the
+-- given list of words.
+-- e.g. sq dict ["camel", "alien"] is the list of
+-- magic squares whose first two rows (and columns) are
+-- camel and alien.
+
+sq :: [String] -> [String] -> [[String]]
+sq dict rows =
+    if length rows == length (head dict)
+    then [rows]
+    else
+      concat [sq dict (rows ++ [word]) |
+        word <- dict,
+        consistent word rows]
+
+-- e.g. consistent ["camel", "alien"] "micro" == "True"
+-- because it continues the magic square:
+--  c a m e l
+--  a l i e n
+--  m i c r o
+--  e e r . .
+--  l n o . .
+-- In this example, the condition is that the word start
+-- with the 3rd letters of camel and alien, namely, 'm' and 'i'.
+
+consistent :: String -> [String] -> Bool
+consistent word rows = let
+  n = length rows
+  prefix = map (!! n) rows
+  in
+    prefix == take n word
+
+-- All the five-by-five magic squares from the wordList.
+-- It looks like this will take an hour or two to run
+-- and will produce a few thousand answers.  Some answers
+-- start appearing after a few seconds.
+
+sq5 :: [[String]]
+sq5 = sq wordList []
