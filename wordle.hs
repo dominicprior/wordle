@@ -3,6 +3,8 @@
 import qualified Data.List as L (delete, sortBy, sort)
 import qualified Data.Ord as O (comparing)
 import qualified Data.Map as M (empty, Map, elems, insertWith, toList, lookup)
+import qualified Data.Set as S (empty, Set, insert, delete, singleton, null,
+          findMin, elemAt, drop, member, difference, toList, fromList, size)
 
 -- Return the matches between the guess word and the
 -- target word with 'M' for matching characters in matching
@@ -160,3 +162,63 @@ consistent word rows = let
 
 sq5 :: [[String]]
 sq5 = sq wordList []
+
+-- More non-Wordle stuff: groups of words that are adjacent.
+
+-- True if the words differ by only one letter.
+-- e.g. adjacent "stone" "stove" == True.
+
+adjacent :: String -> String -> Bool
+adjacent s t = sum (zipWith f s t) == 1
+  where f x y = if x == y then 0 else 1
+
+-- The words in the dict that are adjacent to the given word.
+
+immediateNeighbours :: String -> [String] -> [String]
+immediateNeighbours word dict = filter (adjacent word) dict
+
+-- The words in the dict that are direct or indirect
+-- neighbours of the given word.
+
+zone :: String -> [String] -> S.Set String
+zone word dict = zone' (S.singleton word, S.empty) dict
+
+-- The words in the dict that are direct or indirect
+-- neighbours of the pending and done sets.
+
+zone' :: (S.Set String, S.Set String) -> [String] -> S.Set String
+zone' (pending, done) dict =
+  if S.null pending
+  then done
+  else let
+    first = S.elemAt 0 pending  :: String
+    candidates = immediateNeighbours first dict :: [String]
+    in
+    zone' (foldr zone'' (S.drop 1 pending, S.insert first done) candidates) dict
+
+-- The result of maybe adding the candidate.
+
+zone'' :: String -> (S.Set String, S.Set String) -> (S.Set String, S.Set String)
+zone'' candidate (pending, done) =
+  if S.member candidate pending || S.member candidate done
+  then (pending, done)
+  else (S.insert candidate pending, done)
+
+-- The distinct zones in the dict
+
+zones :: [String] -> [S.Set String]
+zones dict = zones' (S.fromList dict) []
+
+zones' :: S.Set String -> [S.Set String] -> [S.Set String]
+zones' remainingDict res =
+  if S.null remainingDict
+  then res
+  else let
+    first = S.elemAt 0 remainingDict  :: String
+    newZone = zone first (S.toList remainingDict)  :: S.Set String
+    in
+    zones' (S.difference remainingDict newZone) $ newZone : res
+
+z = zones wordList
+
+bigZones = filter (\s -> S.size s > 9) z
