@@ -281,3 +281,7 @@ dd = w "aaa" d
 s = w "stone" wordList
 ss = snd s
 furthest = ss !! 1  -- takes several seconds
+
+distances = map (\str -> (length (snd $ w str wordList) - 1, str)) wordList
+
+a str = immediateNeighbours str wordList
