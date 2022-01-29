@@ -2,9 +2,11 @@
 
 import qualified Data.List as L (delete, sortBy, sort)
 import qualified Data.Ord as O (comparing)
-import qualified Data.Map as M (empty, Map, elems, insertWith, toList, lookup, insert)
+import qualified Data.Map as M (empty, Map, elems, insertWith, toList, lookup, insert,
+          member, (!), fromList)
 import qualified Data.Set as S (empty, Set, insert, delete, singleton, null,
-          findMin, elemAt, drop, member, difference, toList, fromList, size)
+          findMin, elemAt, drop, member, difference, toList, fromList, size, unions,
+          foldr, map)
 
 -- Return the matches between the guess word and the
 -- target word with 'M' for matching characters in matching
@@ -223,7 +225,38 @@ z = zones wordList
 
 bigZones = filter (\s -> S.size s > 9) z
 
+-- The immediate neighbours for each of the words in the dict.
+
 adjacencies :: [String] -> M.Map String [String]
 adjacencies dict = foldr f M.empty dict
   where
   f str m = M.insert str (immediateNeighbours str dict) m
+
+-- The result of the A* min distance algorithm on the adjacency graph.
+-- E.g. wave "aa" ["aa" "ab"] adj waveSoFar == (
+--        fromList [("aa", (0, "")), ("ab", (1, "aa"))],
+--        [fromList [], fromList ["ab"], fromList ["aa"]])
+
+wave :: String -> [String] -> M.Map String [String]
+          ->
+          (M.Map String (Int, String), -- distances and parents
+           [S.Set String]) -- the strings at each distance (in reverse order)
+          ->
+          (M.Map String (Int, String), -- distances and parents
+           [S.Set String]) -- the strings at each distance (in reverse order)
+
+wave word dict adj waveSoFar =    -- !!! not tested yet !!!
+  if S.null waveFront
+  then waveSoFar
+  else (newDists, newFront : snd waveSoFar)
+  where
+    waveFront = head $ snd waveSoFar :: S.Set String
+    lis = S.toList waveFront :: [String]
+    candidates = concatMap (\s -> adj M.! s) lis :: [String]
+    newFront = S.fromList $ filter isNew candidates :: S.Set String
+    isNew :: String -> Bool
+    isNew str = not $ M.member str $ fst waveSoFar
+    newDists :: M.Map String (Int, String)
+    newDists = S.foldr f (fst waveSoFar) newFront
+    f :: String -> M.Map String (Int, String) -> M.Map String (Int, String)
+    f str m = M.insert str (0, "") m
