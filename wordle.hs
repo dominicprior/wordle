@@ -2,7 +2,7 @@
 
 import qualified Data.List as L (delete, sortBy, sort)
 import qualified Data.Ord as O (comparing)
-import qualified Data.Map as M (empty, Map, elems, insertWith, toList, lookup)
+import qualified Data.Map as M (empty, Map, elems, insertWith, toList, lookup, insert)
 import qualified Data.Set as S (empty, Set, insert, delete, singleton, null,
           findMin, elemAt, drop, member, difference, toList, fromList, size)
 
@@ -222,3 +222,8 @@ zones' remainingDict res =
 z = zones wordList
 
 bigZones = filter (\s -> S.size s > 9) z
+
+adjacencies :: [String] -> M.Map String [String]
+adjacencies dict = foldr f M.empty dict
+  where
+  f str m = M.insert str (immediateNeighbours str dict) m
