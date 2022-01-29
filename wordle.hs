@@ -245,10 +245,10 @@ wave :: String -> [String] -> M.Map String [String]
           (M.Map String (Int, String), -- distances and parents
            [S.Set String]) -- the strings at each distance (in reverse order)
 
-wave word dict adj waveSoFar =    -- !!! not tested yet !!!
+wave word dict adj waveSoFar =
   if S.null waveFront
   then waveSoFar
-  else (newDists, newFront : snd waveSoFar)
+  else wave word dict adj (newDists, newFront : snd waveSoFar)
   where
     waveFront = head $ snd waveSoFar :: S.Set String
     lis = S.toList waveFront :: [String]
@@ -260,3 +260,24 @@ wave word dict adj waveSoFar =    -- !!! not tested yet !!!
     newDists = S.foldr f (fst waveSoFar) newFront
     f :: String -> M.Map String (Int, String) -> M.Map String (Int, String)
     f str m = M.insert str (0, "") m
+
+w :: String -> [String] ->
+          (M.Map String (Int, String), -- distances and parents
+           [S.Set String]) -- the strings at each distance (in reverse order)
+
+w word dict =
+  wave word dict (adjacencies dict)
+    (M.fromList [(word, (0, ""))],
+     [S.fromList [word] ] )
+
+d = ["aaa", "aab", "aac", "ajb"]
+dd = w "aaa" d
+{-
+(fromList [("aaa",(0,"")),("aab",(0,"")),("aac",(0,"")),("ajb",(0,""))],
+
+[fromList [],fromList ["ajb"],fromList ["aab","aac"],fromList ["aaa"]])
+-}
+
+s = w "stone" wordList
+ss = snd s
+furthest = ss !! 1  -- takes several seconds
