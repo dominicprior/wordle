@@ -245,7 +245,7 @@ wave :: String -> [String] -> M.Map String [String]
           (M.Map String (Int, String), -- distances and parents
            [S.Set String]) -- the strings at each distance (in reverse order)
 
-wave word dict adj waveSoFar =
+wave word dict adj waveSoFar =   -- still a bit of a mess!
   if S.null waveFront
   then waveSoFar
   else wave word dict adj (newDists, newFront : snd waveSoFar)
@@ -282,6 +282,10 @@ s = w "stone" wordList
 ss = snd s
 furthest = ss !! 1  -- takes several seconds
 
+-- This takes a few hours on a small laptop.
 distances = map (\str -> (length (snd $ w str wordList) - 1, str)) wordList
+-- The 4 greatest distances are:
+-- (43,"reply"),(43,"gusto"),(42,"rusty"),(42,"repay")
+-- there are 43 words in the chain from "reply" to "gusto".
 
 a str = immediateNeighbours str wordList
